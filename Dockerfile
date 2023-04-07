@@ -1,7 +1,8 @@
 #Dockerfile 
 FROM node:18 
 
-RUN apk add --no-cache git
+RUN apt-get update
+RUN apt-get install -qyy git build-essential zip
 
 WORKDIR /tweb
 
