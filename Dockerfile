@@ -9,7 +9,7 @@ WORKDIR /tweb
 RUN git clone https://github.com/morethanwords/tweb.git ./ && \
     npm install
 
-VOLUME ./certs
+VOLUME /tweb/certs
 
 EXPOSE 8080
 
