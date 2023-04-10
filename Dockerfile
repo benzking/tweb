@@ -1,4 +1,5 @@
 #Dockerfile 
+# build stage
 FROM node:18 
 
 RUN apt-get update
@@ -9,6 +10,7 @@ WORKDIR /tweb
 RUN git clone https://github.com/morethanwords/tweb.git ./ && \
     npm install 
 RUN npm install -g http-server 
+# 使用npm run build命令打包web项目
 RUN npm run build
 
 VOLUME /tweb/certs
