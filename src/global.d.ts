@@ -5,6 +5,7 @@ import type {MediaSize} from './helpers/mediaSize';
 import type {AnimationItemGroup} from './components/animationIntersector';
 import type LazyLoadQueue from './components/lazyLoadQueue';
 import type {AppManagers} from './lib/appManagers/managers';
+import type {CustomProperty} from './helpers/dom/customProperties';
 
 declare global {
   interface AddEventListenerOptions extends EventListenerOptions {
@@ -56,7 +57,7 @@ declare global {
 
   type LocalFileError = ApiFileManagerError | ReferenceError | StorageError;
   type LocalErrorType = LocalFileError | NetworkerError | FiltersError |
-    'UNKNOWN' | 'NO_DOC' | 'MIDDLEWARE' | 'PORT_DISCONNECTED' | 'NO_AUTO_DOWNLOAD' | 'CHAT_PRIVATE';
+    'UNKNOWN' | 'NO_DOC' | 'MIDDLEWARE' | 'PORT_DISCONNECTED' | 'NO_AUTO_DOWNLOAD' | 'CHAT_PRIVATE' | 'NO_WASM';
 
   type ServerErrorType = 'FILE_REFERENCE_EXPIRED' | 'SESSION_REVOKED' | 'AUTH_KEY_DUPLICATED' |
     'SESSION_PASSWORD_NEEDED' | 'CONNECTION_NOT_INITED' | 'ERROR_EMPTY' | 'MTPROTO_CLUSTER_INVALID' |
@@ -65,9 +66,15 @@ declare global {
     'USER_ALREADY_PARTICIPANT' | 'USERNAME_INVALID' | 'USERNAME_PURCHASE_AVAILABLE' | 'USERNAMES_ACTIVE_TOO_MUCH' |
     'BOT_INVALID' | 'USERNAME_NOT_OCCUPIED' | 'PINNED_TOO_MUCH' | 'LOCATION_INVALID' |
     'FILE_ID_INVALID' | 'CHANNEL_FORUM_MISSING' | 'TRANSCRIPTION_FAILED' | 'USER_NOT_PARTICIPANT' |
-    'PEER_ID_INVALID' | 'MSG_VOICE_MISSING' | 'CHAT_ADMIN_REQUIRED';
+    'PEER_ID_INVALID' | 'MSG_VOICE_MISSING' | 'CHAT_ADMIN_REQUIRED' | 'QUERY_ID_INVALID' |
+    'CHAT_ADMIN_INVITE_REQUIRED' | 'BOT_APP_INVALID' | 'FILTER_NOT_SUPPORTED' | 'INVITES_TOO_MUCH' |
+    'FILTERS_TOO_MUCH' | 'PEERS_LIST_EMPTY' | 'INVITE_SLUG_EXPIRED' | 'DIALOG_FILTERS_TOO_MUCH' |
+    'CHATLISTS_TOO_MUCH' | 'FRESH_RESET_AUTHORISATION_FORBIDDEN' | 'NO_USER' | 'USER_PRIVACY_RESTRICTED' |
+    'REACTION_INVALID' | 'INVITE_HASH_EXPIRED' | 'PHONE_NOT_OCCUPIED' | 'PARTICIPANT_ID_INVALID';
 
   type ErrorType = LocalErrorType | ServerErrorType;
+
+  type TelegramChoosePeerType = 'users' | 'bots' | 'groups' | 'channels';
 
   interface Error {
     type?: ErrorType;
@@ -95,6 +102,7 @@ declare global {
     lazyLoadQueue?: LazyLoadQueue | false,
     middleware?: Middleware,
     customEmojiSize?: MediaSize,
+    textColor?: CustomProperty,
     animationGroup?: AnimationItemGroup,
     managers?: AppManagers
   };

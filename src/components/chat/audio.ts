@@ -4,9 +4,7 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
-import type {AppMessagesManager} from '../../lib/appManagers/appMessagesManager';
 import type ChatTopbar from './topbar';
-import rootScope from '../../lib/rootScope';
 import appMediaPlaybackController, {AppMediaPlaybackController} from '../appMediaPlaybackController';
 import DivAndCaption from '../divAndCaption';
 import PinnedContainer from './pinnedContainer';
@@ -39,9 +37,9 @@ export default class ChatAudio extends PinnedContainer {
       className: 'audio',
       divAndCaption: new DivAndCaption(
         'pinned-audio',
-        (title: string | HTMLElement | DocumentFragment, subtitle: string | HTMLElement | DocumentFragment) => {
-          replaceContent(this.divAndCaption.title, title);
-          replaceContent(this.divAndCaption.subtitle, subtitle);
+        (options) => {
+          replaceContent(this.divAndCaption.title, options.title);
+          replaceContent(this.divAndCaption.subtitle, options.subtitle);
         }
       ),
       onClose: () => {
@@ -177,7 +175,11 @@ export default class ChatAudio extends PinnedContainer {
       duration: doc.duration
     });
 
-    this.fill(title, subtitle, message);
+    this.fill({
+      title,
+      subtitle,
+      message
+    });
     // this.toggleEl.classList.add('flip-icon');
     this.toggleEl.classList.toggle('flip-icon', !media.paused);
     this.toggle(false);

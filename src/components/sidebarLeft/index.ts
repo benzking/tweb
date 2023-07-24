@@ -98,7 +98,7 @@ export class AppSidebarLeft extends SidebarSlider {
       this.createTab(AppAddMembersTab).open({
         type: 'chat',
         skippable: true,
-        takeOut: (peerIds) => this.createTab(AppNewGroupTab).open(peerIds),
+        takeOut: (peerIds) => this.createTab(AppNewGroupTab).open({peerIds}),
         title: 'GroupAddMembers',
         placeholder: 'SendMessageTo'
       });
@@ -176,7 +176,7 @@ export class AppSidebarLeft extends SidebarSlider {
       },
       checkboxField: new CheckboxField({
         toggle: true,
-        checked: true,
+        checked: liteMode.isAvailable('animations'),
         stateKey: 'settings.liteMode.animations',
         stateValueReverse: true
       }),
@@ -209,14 +209,14 @@ export class AppSidebarLeft extends SidebarSlider {
         }, 0);
       }
     }, {
-      icon: 'char z',
-      text: 'ChatList.Menu.SwitchTo.Z',
+      icon: 'char a',
+      text: 'ChatList.Menu.SwitchTo.A',
       onClick: () => {
         Promise.all([
           sessionStorage.set({kz_version: 'Z'}),
           sessionStorage.delete('tgme_sync')
         ]).then(() => {
-          location.href = 'https://web.telegram.org/z/';
+          location.href = 'https://web.telegram.org/a/';
         });
       },
       verify: () => App.isMainDomain
@@ -230,7 +230,7 @@ export class AppSidebarLeft extends SidebarSlider {
       },
       verify: () => App.isMainDomain
     }, */ {
-      icon: 'download',
+      icon: 'plusround',
       text: 'PWA.Install',
       onClick: () => {
         const installPrompt = getInstallPrompt();
@@ -342,7 +342,11 @@ export class AppSidebarLeft extends SidebarSlider {
     };
     appNavigationController.pushItem(navigationItem);
 
-    apiManagerProxy.getState().then(() => {
+    apiManagerProxy.getState().then((state) => {
+      if(!state.keepSigned) {
+        return;
+      }
+
       const CHECK_UPDATE_INTERVAL = 1800e3;
       const checkUpdateInterval = setInterval(() => {
         fetch('version', {cache: 'no-cache'})
@@ -487,7 +491,7 @@ export class AppSidebarLeft extends SidebarSlider {
       div.classList.add('selector-user'/* , 'scale-in' */);
 
       const avatarEl = new AvatarElement();
-      avatarEl.classList.add('selector-user-avatar', 'tgico', 'avatar-32');
+      avatarEl.classList.add('selector-user-avatar', 'tgico', 'avatar-30');
       avatarEl.isDialog = true;
 
       div.dataset.key = '' + key;
@@ -551,25 +555,21 @@ export class AppSidebarLeft extends SidebarSlider {
 
       helper.replaceChildren();
       searchSuper.nav.classList.remove('hide');
-      if(!value) {
-      }
 
       if(!selectedPeerId && value.trim()) {
         const middleware = searchSuper.middleware.get();
         Promise.all([
-          // appMessagesManager.getConversationsAll(value).then((dialogs) => dialogs.map((d) => d.peerId)),
           this.managers.dialogsStorage.getDialogs({query: value}).then(({dialogs}) => dialogs.map((d) => d.peerId)),
           this.managers.appUsersManager.getContactsPeerIds(value, true)
         ]).then((results) => {
           if(!middleware()) return;
-          const peerIds = new Set(results[0].concat(results[1]));
+          const peerIds = new Set(results[0].concat(results[1]).slice(0, 20));
 
           peerIds.forEach((peerId) => {
             helper.append(renderEntity(peerId));
           });
 
           searchSuper.nav.classList.toggle('hide', !!helper.innerHTML);
-          // console.log('got peerIds by value:', value, [...peerIds]);
         });
       }
 

@@ -39,6 +39,7 @@ $chat-input-border-radius: 1rem;
 	position: relative;
 	transition: transform var(--transition-standard-out);
 	transform: translate3d(0, var(--translateY), 0);
+  z-index: 2; // fix safari topbar bug
 
 	/* body.is-keyboard-opened & {
 		--bottom: var(--padding-bottom);
@@ -563,6 +564,20 @@ $chat-input-border-radius: 1rem;
 		}
 	}
 
+  // @include respond-to(not-handhelds) {
+  //   &:before {
+  //     position: absolute;
+  //     content: " ";
+  //     display: block;
+  //     height: 100vh;
+  //     width: 1px;
+  //     background-color: var(--border-color);
+  //     inset-inline-start: -1px;
+  //     top: 0;
+  //     z-index: 3;
+  //   }
+  // }
+
 	@include respond-to(floating-left-sidebar) {
 		position: fixed !important;
 		left: 0;
@@ -663,6 +678,7 @@ $chat-input-border-radius: 1rem;
 	&-background {
 		overflow: hidden;
 		background-color: #e6ebee;
+    user-select: none;
 
 		html.night & {
 			background-color: var(--border-color);
@@ -1310,12 +1326,37 @@ $chat-input-border-radius: 1rem;
       background-color: var(--primary-color);
       display: flex;
       align-items: center;
-      justify-content: center;
+      padding: 0 .6875rem;
+      // justify-content: center;
       margin-inline-start: var(--commands-margin-left);
       cursor: pointer;
+      color: #fff;
+      font-weight: var(--font-weight-bold);
+
+      @include hover() {
+        background-color: var(--dark-primary-color) !important;
+      }
 
       .animated-menu-close-icon {
         position: relative;
+      }
+
+      &:before {
+        font-size: 1.25rem;
+        margin-right: .375rem;
+        margin-left: -.125rem;
+      }
+
+      &:not(.is-view) {
+        &:before {
+          display: none;
+        }
+      }
+
+      &-view {
+        white-space: nowrap;
+        overflow: hidden;
+        // @include text-overflow();
       }
 
       &-icon-scale {
@@ -1323,6 +1364,7 @@ $chat-input-border-radius: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-left: -1px;
       }
 
       .animated-menu-close-icon {
@@ -1426,7 +1468,7 @@ $chat-input-border-radius: 1rem;
       }
 
       &[data-offset="commands"] {
-        --offset-translateX: 48px;
+        --offset-translateX: calc(var(--commands-size) + .625rem);
       }
 
       .toggle-emoticons,
@@ -1458,9 +1500,12 @@ $chat-input-border-radius: 1rem;
           transition: transform var(--transition-standard-in);
         }
 
-        .new-message-send-as-container,
-        .new-message-bot-commands {
+        .new-message-send-as-container {
           transition: transform var(--transition-standard-in), opacity var(--transition-standard-in);
+        }
+
+        .new-message-bot-commands {
+          transition: transform var(--transition-standard-in), opacity var(--transition-standard-in), width var(--transition-standard-in);
         }
       }
     }
@@ -1546,6 +1591,7 @@ $chat-input-border-radius: 1rem;
 	width: 100%;
 	flex: 1 1 auto;
 	position: relative;
+  z-index: 1; // fix safari topbar bug
 
 	transform: translate3d(0, var(--translateY), 0);
 	transition: transform var(--transition-standard-out);

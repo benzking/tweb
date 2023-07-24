@@ -270,7 +270,8 @@ ul.chatlist {
         .text-highlight,
         .premium-icon,
         .verified-icon,
-        .sending-status-icon {
+        .sending-status-icon,
+        .dialog-forward-ico {
           color: #fff !important;
         }
 
@@ -345,6 +346,15 @@ ul.chatlist {
         flex: 0 0 auto;
         margin-inline-start: .5rem;
       }
+    }
+
+    &-forward-ico {
+      display: inline-block;
+      vertical-align: middle;
+      width: 20px;
+      height: 20px;
+      line-height: 18px;
+      color: var(--chatlist-pinned-color);
     }
     
     &-subtitle {
@@ -595,6 +605,33 @@ ul.chatlist {
           top: 50%;
         }
       }
+    }
+  }
+
+  &-top-notification {
+    margin: 0 .5rem .5rem;
+    // border: 1px solid var(--border-color);
+    background-color: var(--light-filled-secondary-text-color);
+
+    &-container {
+      height: 0;
+      overflow: hidden;
+
+      @include animation-level(2) {
+        transition: height var(--transition-standard-in);
+      }
+
+      &.is-visible:not(.backwards) {
+        height: 4rem;
+      }
+    }
+
+    &:before {
+      content: $tgico-next;
+      position: absolute;
+      right: .5rem;
+      font-size: 1.5rem;
+      color: var(--secondary-text-color);
     }
   }
 

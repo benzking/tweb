@@ -46,6 +46,8 @@ import type {AppWebPagesManager} from './appWebPagesManager';
 import type AppAttachMenuBotsManager from './appAttachMenuBotsManager';
 import type AppSeamlessLoginManager from './appSeamlessLoginManager';
 import type AppThemesManager from './appThemesManager';
+import type AppUsernamesManager from './appThemesManager';
+import type AppChatInvitesManager from './appChatInvitesManager';
 import type {AppManagers} from './managers';
 
 export class AppManager {
@@ -92,6 +94,8 @@ export class AppManager {
   protected appAttachMenuBotsManager: AppAttachMenuBotsManager;
   protected appSeamlessLoginManager: AppSeamlessLoginManager;
   protected appThemesManager: AppThemesManager;
+  protected appUsernamesManager: AppUsernamesManager;
+  protected appChatInvitesManager: AppChatInvitesManager;
 
   public clear: (init?: boolean) => void;
 

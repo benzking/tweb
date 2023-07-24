@@ -112,8 +112,10 @@ export type State = {
   playbackParams: ReturnType<AppMediaPlaybackController['getPlaybackParams']>,
   keepSigned: boolean,
   chatContextMenuHintWasShown: boolean,
+  hideChatJoinRequests: {[peerId: PeerId]: number},
   stateId: number,
-  notifySettings: {[k in Exclude<NotifyPeer['_'], 'notifyPeer'>]?: PeerNotifySettings.peerNotifySettings}
+  notifySettings: {[k in Exclude<NotifyPeer['_'], 'notifyPeer'>]?: PeerNotifySettings.peerNotifySettings},
+  confirmedWebViews: BotId[]
 };
 
 // const BACKGROUND_DAY_MOBILE: Background = {
@@ -319,6 +321,8 @@ export const STATE_INIT: State = {
   },
   keepSigned: true,
   chatContextMenuHintWasShown: false,
+  hideChatJoinRequests: {},
   stateId: nextRandomUint(32),
-  notifySettings: {}
+  notifySettings: {},
+  confirmedWebViews: []
 };

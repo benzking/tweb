@@ -276,9 +276,10 @@ $btn-menu-z-index: 4;
 
     &:before {
       color: var(--primary-text-color);
-      font-size: var(--icon-size);
+      font-size: var(--icon-size) !important;
       align-self: flex-start;
       margin-top: .125rem;
+      padding: 0;
     }
 
     &-icon,
@@ -439,7 +440,6 @@ $btn-menu-z-index: 4;
   }
 
   &-reactions {
-    --inner-shadow-degree: 90deg;
     max-width: 100%;
     max-height: 100%;
     height: inherit;
@@ -496,12 +496,15 @@ $btn-menu-z-index: 4;
         margin-inline-start: var(--menu-offset);
         
         .btn-menu-reactions {
-          --inner-shadow-degree: 180deg;
           width: inherit;
           height: auto;
           display: flex;
           flex-direction: column;
           transform-origin: top right;
+
+          .inner-shadow {
+            --inner-shadow-degree: 180deg;
+          }
         }
 
         .btn-menu-reactions-reaction {
@@ -547,18 +550,6 @@ $btn-menu-z-index: 4;
         // left: var(--offset);
         bottom: calc(var(--size) / -2);
       }
-    }
-
-    &:after {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      content: " ";
-      pointer-events: none;
-      border-radius: inherit;
-      background: linear-gradient(var(--inner-shadow-degree), var(--surface-color) 0%, rgba(var(--surface-color-rgb), 0) 1rem, rgba(var(--surface-color-rgb), 0) calc(100% - 1rem), var(--surface-color) 100%);
     }
 
     .scrollable {
@@ -686,47 +677,6 @@ $btn-menu-z-index: 4;
     pointer-events: none !important;
     opacity: var(--disabled-opacity);
   }
-
-  &.shimmer {
-    &:before {
-      content: "";
-      position: absolute;
-      top: 0;
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to right, transparent 0%, rgba(var(--surface-color-rgb), .2) 50%, transparent 100%);
-      animation: wave 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  
-      @keyframes wave {
-        0% {
-          transform: translateX(-100%);
-        }
-        50% {
-          transform: translateX(100%);
-        }
-        100% {
-          transform: translateX(100%);
-        }
-      }
-    }
-  }
-}
-
-.btn-control {
-  width: auto;
-  height: 2.5rem;
-  line-height: 2.5rem;
-  align-items: center;
-  padding-inline: .75rem 1.5rem;
-  margin: .9375rem auto 1rem;
-  border-radius: 1.25rem;
-  display: flex;
-
-  &.tgico:before {
-    font-size: 1.5rem;
-    margin-inline-end: .375rem;
-  }
 }
 
 // ! example: multiselect input, button in pinned messages chat, settings, chat background tab
@@ -769,6 +719,42 @@ $btn-menu-z-index: 4;
 
   &.btn-short:before {
     margin-inline-end: 1rem;
+  }
+}
+
+.btn-control {
+  width: auto;
+  height: 2.5rem;
+  line-height: 2.5rem;
+  align-items: center;
+  padding-inline: .75rem 1.5rem;
+  margin: .9375rem auto 1rem;
+  border-radius: 1.25rem;
+  display: flex;
+
+  &-small {
+    height: 1.875rem;
+    padding-inline: .75rem;
+    font-size: .9375rem;
+    width: auto;
+    margin: 0;
+    border-radius: .9375rem;
+    line-height: 1;
+    font-weight: var(--font-weight-bold);
+
+    @include animation-level(2) {
+      transition: width 0.2s, background-color .2s, color .2s;
+    }
+
+    &.active {
+      background-color: var(--light-primary-color) !important;
+      color: var(--primary-color);
+    }
+  }
+
+  &.tgico:before {
+    font-size: 1.5rem;
+    margin-inline-end: .375rem;
   }
 }
 

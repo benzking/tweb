@@ -44,7 +44,7 @@ export class AppPeersManager extends AppManager {
 
   public getPeerMigratedTo(peerId: PeerId) {
     if(peerId.isUser()) {
-      return false;
+      return;
     }
 
     const chat = this.appChatsManager.getChat(peerId.toChatId()) as Chat.chat;
@@ -52,8 +52,6 @@ export class AppPeersManager extends AppManager {
     if(migratedTo && chat.pFlags.deactivated) {
       return getPeerId(migratedTo);
     }
-
-    return false;
   }
 
   public getOutputPeer(peerId: PeerId): Peer {
@@ -132,6 +130,10 @@ export class AppPeersManager extends AppManager {
 
   public isUser(peerId: PeerId)/* : peerId is UserId */ {
     return isUser(peerId);
+  }
+
+  public isRegularUser(peerId: PeerId) {
+    return this.isUser(peerId) && this.appUsersManager.isRegularUser(peerId);
   }
 
   public isAnyChat(peerId: PeerId) {
@@ -295,4 +297,4 @@ export class AppPeersManager extends AppManager {
   }
 }
 
-export type IsPeerType = 'isChannel' | 'isMegagroup' | 'isAnyGroup' | 'isBroadcast' | 'isBot' | 'isContact' | 'isUser' | 'isAnyChat';
+export type IsPeerType = 'isChannel' | 'isMegagroup' | 'isAnyGroup' | 'isBroadcast' | 'isBot' | 'isContact' | 'isUser' | 'isAnyChat' | 'isRegularUser';

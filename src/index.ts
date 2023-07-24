@@ -4,6 +4,8 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
+/* @refresh reload */
+
 import App from './config/app';
 import blurActiveElement from './helpers/dom/blurActiveElement';
 import cancelEvent from './helpers/dom/cancelEvent';
@@ -32,6 +34,7 @@ import {AuthState} from './types';
 import {IS_BETA} from './config/debug';
 import IS_INSTALL_PROMPT_SUPPORTED from './environment/installPrompt';
 import cacheInstallPrompt from './helpers/dom/installPrompt';
+import {fillLocalizedDates} from './helpers/date';
 // import appNavigationController from './components/appNavigationController';
 
 document.addEventListener('DOMContentLoaded', async() => {
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async() => {
   rootScope.managers = getProxiedManagers();
 
   const manifest = document.getElementById('manifest') as HTMLLinkElement;
-  manifest.href = `site${IS_APPLE && !IS_APPLE_MOBILE ? '_apple' : ''}.webmanifest?v=jw3mK7G9Aq`;
+  if(manifest) manifest.href = `site${IS_APPLE && !IS_APPLE_MOBILE ? '_apple' : ''}.webmanifest?v=jw3mK7G9Aq`;
 
   singleInstance.start();
 
@@ -62,7 +65,8 @@ document.addEventListener('DOMContentLoaded', async() => {
   let setViewportVH = false/* , hasFocus = false */;
   let lastVH: number;
   const setVH = () => {
-    const vh = (setViewportVH && !overlayCounter.isOverlayActive ? (w as VisualViewport).height || (w as Window).innerHeight : window.innerHeight) * 0.01;
+    let vh = (setViewportVH && !overlayCounter.isOverlayActive ? (w as VisualViewport).height || (w as Window).innerHeight : window.innerHeight) * 0.01;
+    vh = +vh.toFixed(2);
     if(lastVH === vh) {
       return;
     } else if(IS_TOUCH_SUPPORTED && lastVH < vh && (vh - lastVH) > 1) {
@@ -253,7 +257,13 @@ document.addEventListener('DOMContentLoaded', async() => {
 
   if(langPack.appVersion !== App.langPackVersion) {
     I18n.getLangPack(langPack.lang_code);
+  } else {
+    fillLocalizedDates();
   }
+
+  rootScope.addEventListener('language_change', () => {
+    fillLocalizedDates();
+  });
 
   /**
    * won't fire if font is loaded too fast

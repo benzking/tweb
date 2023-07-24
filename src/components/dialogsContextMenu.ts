@@ -19,6 +19,8 @@ import {GENERAL_TOPIC_ID} from '../lib/mtproto/mtproto_config';
 import showLimitPopup from './popups/limit';
 import createContextMenu from '../helpers/dom/createContextMenu';
 import PopupElement from './popups';
+import cancelEvent from '../helpers/dom/cancelEvent';
+import IS_SHARED_WORKER_SUPPORTED from '../environment/sharedWorkerSupport';
 
 export default class DialogsContextMenu {
   private buttons: ButtonMenuItemOptionsVerifiable[];
@@ -68,6 +70,14 @@ export default class DialogsContextMenu {
 
   private getButtons() {
     return this.buttons ??= [{
+      icon: 'newtab',
+      text: 'OpenInNewTab',
+      onClick: (e) => {
+        appDialogsManager.openDialogInNewTab(this.li);
+        cancelEvent(e);
+      },
+      verify: () => IS_SHARED_WORKER_SUPPORTED
+    }, {
       icon: 'unread',
       text: 'MarkAsUnread',
       onClick: this.onUnreadClick,
@@ -223,10 +233,10 @@ export default class DialogsContextMenu {
   private onUnreadClick = async() => {
     const {peerId, dialog} = this;
     if(dialog.unread_count) {
-      this.managers.appMessagesManager.readHistory(peerId, dialog.top_message, this.threadId);
-
       if(!this.threadId) {
         this.managers.appMessagesManager.markDialogUnread(peerId, true);
+      } else {
+        this.managers.appMessagesManager.readHistory(peerId, dialog.top_message, this.threadId);
       }
     } else if(!this.threadId) {
       this.managers.appMessagesManager.markDialogUnread(peerId);

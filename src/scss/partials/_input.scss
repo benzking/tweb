@@ -40,7 +40,6 @@
     
     margin-top: -9px;
     transform: rotate(45deg);
-    -webkit-transform: rotate(45deg);
     transition: .2s all;
   }
   
@@ -252,6 +251,11 @@
     height: auto!important;
 
     z-index: -3;
+  }
+
+  & &-input[contenteditable="false"] {
+    opacity: var(--disabled-opacity);
+    pointer-events: none;
   }
 }
 

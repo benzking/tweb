@@ -67,6 +67,7 @@ export namespace MessageRender {
         args.push(postViewsSpan, channelViews);
         if(postAuthor) {
           const span = document.createElement('span');
+          span.classList.add('post-author');
           setInnerHTML(span, wrapEmojiText(postAuthor));
           span.insertAdjacentHTML('beforeend', ',' + NBSP)
           args.push(span);
@@ -199,11 +200,19 @@ export namespace MessageRender {
         peerId: titlePeerId,
         dialog: false,
         onlyFirstName: false,
-        plainText: false
+        plainText: false,
+        fromName: !titlePeerId ? (originalMessage as Message.message).fwd_from?.from_name : undefined
       }).element;
     }
 
-    const {container, fillPromise} = wrapReply(originalPeerTitle, undefined, chat.animationGroup, originalMessage, chat.isAnyGroup ? titlePeerId : undefined);
+    const {container, fillPromise} = wrapReply({
+      title: originalPeerTitle,
+      animationGroup: chat.animationGroup,
+      message: originalMessage,
+      setColorPeerId: chat.isAnyGroup ? titlePeerId : undefined,
+      textColor: 'primary-text-color'
+    });
+
     await fillPromise;
     if(currentReplyDiv) {
       if(currentReplyDiv.classList.contains('floating-part')) {

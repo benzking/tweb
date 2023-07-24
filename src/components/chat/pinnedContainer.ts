@@ -19,6 +19,12 @@ const classNames: string[] = ['is-pinned-message-shown', 'is-pinned-audio-shown'
 const CLASSNAME_BASE = 'pinned-container';
 const HEIGHT = 52;
 
+export type WrapPinnedContainerOptions = {
+  title: string | HTMLElement | DocumentFragment,
+  subtitle?: WrapPinnedContainerOptions['title'],
+  message?: Message.message | Message.messageService,
+};
+
 export default class PinnedContainer {
   public wrapperUtils: HTMLElement;
   public btnClose: HTMLElement;
@@ -28,7 +34,7 @@ export default class PinnedContainer {
   protected chat: Chat;
   protected listenerSetter: ListenerSetter;
   public className: string;
-  public divAndCaption: DivAndCaption<(title: string | HTMLElement | DocumentFragment, subtitle: string | HTMLElement | DocumentFragment, message?: any) => void>;
+  public divAndCaption: DivAndCaption<(options: WrapPinnedContainerOptions) => void>;
 
   protected floating = false;
 
@@ -46,25 +52,27 @@ export default class PinnedContainer {
     safeAssign(this, options);
 
     const {divAndCaption, className} = this;
-    divAndCaption.container.classList.add(CLASSNAME_BASE, 'hide');
-    divAndCaption.title.classList.add(CLASSNAME_BASE + '-title');
-    divAndCaption.subtitle.classList.add(CLASSNAME_BASE + '-subtitle');
-    divAndCaption.content.classList.add(CLASSNAME_BASE + '-content');
+    if(divAndCaption) {
+      divAndCaption.container.classList.add(CLASSNAME_BASE, 'hide');
+      divAndCaption.title.classList.add(CLASSNAME_BASE + '-title');
+      divAndCaption.subtitle.classList.add(CLASSNAME_BASE + '-subtitle');
+      divAndCaption.content.classList.add(CLASSNAME_BASE + '-content');
+    }
 
     this.btnClose = document.createElement('button');
     this.btnClose.classList.add(CLASSNAME_BASE + '-close', `pinned-${className}-close`, 'btn-icon', 'tgico-close');
 
     this.wrapper = document.createElement('div');
-    this.wrapper.classList.add(CLASSNAME_BASE + '-wrapper');
+    this.wrapper.classList.add(CLASSNAME_BASE + '-wrapper', `pinned-${className}-wrapper`);
     ripple(this.wrapper);
 
     this.wrapperUtils = document.createElement('div');
     this.wrapperUtils.classList.add(CLASSNAME_BASE + '-wrapper-utils');
     this.wrapperUtils.append(this.btnClose);
 
-    this.wrapper.append(...Array.from(divAndCaption.container.children), this.wrapperUtils);
+    this.wrapper.append(...(divAndCaption ? Array.from(divAndCaption.container.children) : []), this.wrapperUtils);
 
-    divAndCaption.container.append(this.wrapper/* , this.close */);
+    divAndCaption && divAndCaption.container.append(this.wrapper/* , this.close */);
 
     this.attachOnCloseEvent(this.btnClose);
   }
@@ -120,10 +128,11 @@ export default class PinnedContainer {
     return this.divAndCaption.container.classList.contains('is-floating');
   }
 
-  public fill(title: string | HTMLElement | DocumentFragment, subtitle: string | HTMLElement | DocumentFragment, message: Message.message) {
+  public fill(options: WrapPinnedContainerOptions) {
+    const {message} = options;
     this.divAndCaption.container.dataset.peerId = '' + message.peerId;
     this.divAndCaption.container.dataset.mid = '' + message.mid;
-    this.divAndCaption.fill(title, subtitle, message);
+    this.divAndCaption.fill(options);
     this.topbar.setUtilsWidth();
   }
 }

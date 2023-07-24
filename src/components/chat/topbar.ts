@@ -48,8 +48,13 @@ import {makeMediaSize} from '../../helpers/mediaSize';
 import {FOLDER_ID_ALL} from '../../lib/mtproto/mtproto_config';
 import formatNumber from '../../helpers/number/formatNumber';
 import PopupElement from '../popups';
+import ChatRequests from './requests';
+import modifyAckedResult, {modifyAckedPromise} from '../../helpers/modifyAckedResult';
+import callbackify from '../../helpers/callbackify';
 
 type ButtonToVerify = {element?: HTMLElement, verify: () => boolean | Promise<boolean>};
+
+const PINNED_ALWAYS_FLOATING = false;
 
 export default class ChatTopbar {
   public container: HTMLDivElement;
@@ -68,6 +73,7 @@ export default class ChatTopbar {
   private btnSearch: HTMLButtonElement;
   private btnMore: HTMLElement;
 
+  private chatRequests: ChatRequests;
   private chatAudio: ChatAudio;
   public pinnedMessage: ChatPinnedMessage;
 
@@ -145,6 +151,7 @@ export default class ChatTopbar {
     this.chatUtils.classList.add('chat-utils');
 
     this.chatAudio = new ChatAudio(this, this.chat, this.managers);
+    this.chatRequests = new ChatRequests(this, this.chat, this.managers);
 
     if(this.menuButtons.length) {
       this.btnMore = ButtonMenuToggle({
@@ -163,7 +170,7 @@ export default class ChatTopbar {
 
     this.chatUtils.append(...[
       // this.chatAudio ? this.chatAudio.divAndCaption.container : null,
-      this.pinnedMessage ? this.pinnedMessage.pinnedMessageContainer.divAndCaption.container : null,
+      // this.pinnedMessage ? this.pinnedMessage.pinnedMessageContainer.divAndCaption.container : null,
       this.btnJoin,
       this.btnPinned,
       this.btnCall,
@@ -179,9 +186,17 @@ export default class ChatTopbar {
     this.chatInfoContainer.append(this.btnBack, this.chatInfo, this.chatUtils);
     this.container.append(this.chatInfoContainer);
 
+    if(this.pinnedMessage) {
+      this.appendPinnedMessage(this.pinnedMessage);
+    }
+
     if(this.chatAudio) {
       // this.container.append(this.chatAudio.divAndCaption.container, this.chatUtils);
       this.container.append(this.chatAudio.divAndCaption.container);
+    }
+
+    if(this.chatRequests) {
+      this.container.append(this.chatRequests.divAndCaption.container);
     }
 
     // * construction end
@@ -304,7 +319,7 @@ export default class ChatTopbar {
   };
 
   private verifyCallButton = async(type?: CallType) => {
-    if(!IS_CALL_SUPPORTED || !this.peerId.isUser()) return false;
+    if(!IS_CALL_SUPPORTED || !this.peerId.isUser() || this.chat.type !== 'chat') return false;
     const userId = this.peerId.toUserId();
     const userFull = await this.managers.appProfileManager.getCachedFullUser(userId);
 
@@ -420,37 +435,31 @@ export default class ChatTopbar {
       text: 'ShareContact',
       onClick: () => {
         const contactPeerId = this.peerId;
-        PopupElement.createPopup(PopupPickUser, {
-          peerTypes: ['dialogs', 'contacts'],
-          onSelect: (peerId) => {
-            return new Promise((resolve, reject) => {
-              PopupElement.createPopup(PopupPeer, '', {
-                titleLangKey: 'SendMessageTitle',
-                descriptionLangKey: 'SendContactToGroupText',
-                descriptionLangArgs: [new PeerTitle({peerId, dialog: true}).element],
-                buttons: [{
-                  langKey: 'Send',
-                  callback: () => {
-                    resolve();
+        PopupPickUser.createSharingPicker((peerId) => {
+          return new Promise((resolve, reject) => {
+            PopupElement.createPopup(PopupPeer, '', {
+              titleLangKey: 'SendMessageTitle',
+              descriptionLangKey: 'SendContactToGroupText',
+              descriptionLangArgs: [new PeerTitle({peerId, dialog: true}).element],
+              buttons: [{
+                langKey: 'Send',
+                callback: () => {
+                  resolve();
 
-                    this.managers.appMessagesManager.sendContact(peerId, contactPeerId);
-                    this.chat.appImManager.setInnerPeer({peerId});
-                  }
-                }, {
-                  langKey: 'Cancel',
-                  callback: () => {
-                    reject();
-                  },
-                  isCancel: true
-                }],
-                peerId,
-                overlayClosable: true
-              }).show();
-            });
-          },
-          placeholder: 'ShareModal.Search.Placeholder',
-          chatRightsActions: ['send_plain'],
-          selfPresence: 'ChatYourSelf'
+                  this.managers.appMessagesManager.sendContact(peerId, contactPeerId);
+                  this.chat.appImManager.setInnerPeer({peerId});
+                }
+              }, {
+                langKey: 'Cancel',
+                callback: () => {
+                  reject();
+                },
+                isCancel: true
+              }],
+              peerId,
+              overlayClosable: true
+            }).show();
+          });
         });
       },
       verify: async() => rootScope.myId !== this.peerId && this.peerId.isUser() && (await this.managers.appPeersManager.isContact(this.peerId)) && !!(await this.managers.appUsersManager.getUser(this.peerId.toUserId())).phone
@@ -645,6 +654,25 @@ export default class ChatTopbar {
       }
     });
 
+    this.listenerSetter.add(rootScope)('chat_requests', ({chatId, recentRequesters, requestsPending}) => {
+      if(this.peerId !== chatId.toPeerId(true)) {
+        return;
+      }
+
+      const middleware = this.chat.bubbles.getMiddleware();
+      this.chatRequests.set(
+        this.peerId,
+        recentRequesters.map((userId) => userId.toPeerId(false)),
+        requestsPending
+      ).then((callback) => {
+        if(!middleware()) {
+          return;
+        }
+
+        callback();
+      });
+    });
+
     this.chat.addEventListener('setPeer', (mid, isTopMessage) => {
       const middleware = this.chat.bubbles.getMiddleware();
       apiManagerProxy.getState().then((state) => {
@@ -695,9 +723,10 @@ export default class ChatTopbar {
   };
 
   private onChangeScreen = (from: ScreenSize, to: ScreenSize) => {
-    this.container.classList.toggle('is-pinned-floating', mediaSizes.isMobile);
+    const isFloating = to === ScreenSize.mobile || PINNED_ALWAYS_FLOATING;
+    this.container.classList.toggle('is-pinned-floating', mediaSizes.isMobile || isFloating);
     // this.chatAudio && this.chatAudio.divAndCaption.container.classList.toggle('is-floating', to === ScreenSize.mobile);
-    this.pinnedMessage && this.pinnedMessage.pinnedMessageContainer.divAndCaption.container.classList.toggle('is-floating', to === ScreenSize.mobile);
+    this.pinnedMessage && this.pinnedMessage.pinnedMessageContainer.divAndCaption.container.classList.toggle('is-floating', isFloating);
     this.onResize();
   };
 
@@ -708,9 +737,11 @@ export default class ChatTopbar {
 
     this.pinnedMessage?.destroy(); // * возможно это можно не делать
     this.chatAudio?.destroy();
+    this.chatRequests?.destroy();
 
-    delete this.chatAudio;
     delete this.pinnedMessage;
+    delete this.chatAudio;
+    delete this.chatRequests;
   }
 
   public cleanup() {
@@ -719,8 +750,22 @@ export default class ChatTopbar {
     }
   }
 
+  private appendPinnedMessage(pinnedMessage: ChatPinnedMessage) {
+    const container = pinnedMessage.pinnedMessageContainer.divAndCaption.container;
+    if(this.pinnedMessage && this.pinnedMessage !== pinnedMessage) {
+      this.pinnedMessage.pinnedMessageContainer.divAndCaption.container.replaceWith(container);
+    } else {
+      if(PINNED_ALWAYS_FLOATING) {
+        this.container.append(container);
+      } else {
+        this.chatUtils.prepend(container);
+      }
+    }
+  }
+
   public async finishPeerChange(options: Parameters<Chat['finishPeerChange']>[0]) {
     const {peerId, threadId} = this.chat;
+    const {middleware} = options;
 
     let newAvatar: AvatarElement;
     if(this.chat.type === 'chat') {
@@ -738,7 +783,8 @@ export default class ChatTopbar {
       _,
       setTitleCallback,
       setStatusCallback,
-      state
+      state,
+      setRequestsCallback
     ] = await Promise.all([
       this.managers.appPeersManager.isBroadcast(peerId),
       this.managers.appPeersManager.isAnyChat(peerId),
@@ -746,7 +792,8 @@ export default class ChatTopbar {
       newAvatar ? newAvatar.updateWithOptions({peerId, threadId, wrapOptions: {customEmojiSize: makeMediaSize(32, 32)}}) : undefined,
       this.setTitleManual(),
       this.setPeerStatusManual(true),
-      apiManagerProxy.getState()
+      apiManagerProxy.getState(),
+      modifyAckedPromise(this.chatRequests.setPeerId(peerId))
     ]);
 
     return () => {
@@ -794,14 +841,8 @@ export default class ChatTopbar {
       if(isPinnedMessagesNeeded || this.chat.type === 'discussion') {
         if(this.chat.wasAlreadyUsed || !this.pinnedMessage) { // * change
           const newPinnedMessage = new ChatPinnedMessage(this, this.chat, this.managers);
-          if(this.pinnedMessage) {
-            this.pinnedMessage.pinnedMessageContainer.divAndCaption.container.replaceWith(newPinnedMessage.pinnedMessageContainer.divAndCaption.container);
-            this.pinnedMessage.destroy();
-            // this.pinnedMessage.pinnedMessageContainer.toggle(true);
-          } else {
-            this.chatUtils.prepend(this.pinnedMessage.pinnedMessageContainer.divAndCaption.container);
-          }
-
+          this.appendPinnedMessage(newPinnedMessage);
+          this.pinnedMessage?.destroy();
           this.pinnedMessage = newPinnedMessage;
         }
 
@@ -824,6 +865,18 @@ export default class ChatTopbar {
       this.setMutedState();
 
       this.container.classList.remove('hide');
+
+      if(setRequestsCallback.result instanceof Promise) {
+        this.chatRequests.unset(peerId);
+      }
+
+      callbackify(setRequestsCallback.result, (callback) => {
+        if(!middleware()) {
+          return;
+        }
+
+        callback();
+      });
     };
   }
 
@@ -836,7 +889,11 @@ export default class ChatTopbar {
       else titleEl = i18n('PinnedMessagesCount', [count]);
 
       if(count === undefined) {
-        this.managers.appMessagesManager.getSearchCounters(peerId, [{_: 'inputMessagesFilterPinned'}], false).then((result) => {
+        this.managers.appMessagesManager.getSearchCounters(
+          peerId,
+          [{_: 'inputMessagesFilterPinned'}],
+          false
+        ).then((result) => {
           if(!middleware()) return;
           const count = result[0].count;
           this.setTitle(count);
@@ -857,7 +914,13 @@ export default class ChatTopbar {
       titleEl = i18n(peerId === rootScope.myId ? 'Reminders' : 'ScheduledMessages');
     } else if(this.chat.type === 'discussion') {
       if(count === undefined) {
-        const result = await this.managers.acknowledged.appMessagesManager.getHistory(peerId, 0, 1, 0, threadId);
+        const result = await this.managers.acknowledged.appMessagesManager.getHistory({
+          peerId,
+          offsetId: 0,
+          limit: 1,
+          backLimit: 0,
+          threadId
+        });
         if(!middleware()) return;
         if(result.cached) {
           const historyResult = await result.result;
@@ -946,7 +1009,11 @@ export default class ChatTopbar {
   };
 
   public setFloating = () => {
-    const containers = [this.chatAudio, this.pinnedMessage?.pinnedMessageContainer].filter(Boolean);
+    const containers = [
+      this.chatAudio,
+      this.chatRequests,
+      this.pinnedMessage?.pinnedMessageContainer
+    ].filter(Boolean);
     const count = containers.reduce((acc, container) => {
       const isFloating = container.isFloating();
       this.container.classList.toggle(`is-pinned-${container.className}-floating`, isFloating);

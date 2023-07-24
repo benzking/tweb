@@ -361,7 +361,11 @@ export default class BubbleGroups {
     return this.itemsMap.get(bubble);
   }
 
-  getLastGroup() {
+  get firstGroup() {
+    return this.groups[this.groups.length - 1];
+  }
+
+  get lastGroup() {
     return this.groups[0];
   }
 
@@ -484,7 +488,7 @@ export default class BubbleGroups {
     const {dateTimestamp} = this.chat.bubbles.getDateForDateContainer(timestamp);
     const item: GroupItem = {
       mid,
-      groupMid: this.chat.type === 'scheduled' ? +`${(timestamp * 1000 - dateTimestamp) / 1000}.${mid}` : mid,
+      groupMid: this.chat.type === 'scheduled' ? +`${(timestamp * 1000 - dateTimestamp) / 1000}.${+('' + mid).replace('.', '')}` : mid,
       fromId: this.getMessageFromId(message),
       bubble,
       // timestamp: this.chat.type === 'scheduled' ? +`${(timestamp * 1000 - dateTimestamp) / 1000}.${mid}` : timestamp,

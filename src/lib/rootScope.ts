@@ -4,7 +4,7 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
-import type {Message, StickerSet, Update, NotifyPeer, PeerNotifySettings, PollResults, Poll, WebPage, GroupCall, GroupCallParticipant, ReactionCount, MessagePeerReaction, PhoneCall, Config, Reaction} from '../layer';
+import type {Message, StickerSet, Update, NotifyPeer, PeerNotifySettings, PollResults, Poll, WebPage, GroupCall, GroupCallParticipant, ReactionCount, MessagePeerReaction, PhoneCall, Config, Reaction, AttachMenuBot} from '../layer';
 import type {Dialog, ForumTopic, MessagesStorageKey, MyMessage} from './appManagers/appMessagesManager';
 import type {MyDialogFilter} from './storages/filters';
 import type {Folder} from './storages/dialogs';
@@ -29,12 +29,15 @@ export type BroadcastEvents = {
   'chat_update': ChatId,
   'chat_toggle_forum': {chatId: ChatId, enabled: boolean},
   'chat_participant': Update.updateChannelParticipant,
+  'chat_requests': {requestsPending: number, recentRequesters: UserId[], chatId: ChatId}
 
   'channel_update': ChatId,
 
   'user_update': UserId,
   'user_auth': UserAuth,
   'user_full_update': UserId,
+
+  'attach_menu_bot': AttachMenuBot,
 
   'peer_pinned_messages': {peerId: PeerId, mids?: number[], pinned?: boolean, unpinAll?: true},
   'peer_pinned_hidden': {peerId: PeerId, maxId: number},
@@ -49,6 +52,7 @@ export type BroadcastEvents = {
   'filter_update': MyDialogFilter,
   'filter_new': MyDialogFilter,
   'filter_order': number[],
+  'filter_joined': MyDialogFilter,
 
   'folder_unread': Omit<Folder, 'dialogs' | 'dispatchUnreadTimeout'>,
 
@@ -124,6 +128,7 @@ export type BroadcastEvents = {
   'language_change': string,
 
   'theme_change': void,
+  'theme_changed': void,
 
   'media_play': void,
 
@@ -148,7 +153,9 @@ export type BroadcastEvents = {
 
   'logging_out': void,
 
-  'payment_sent': {peerId: PeerId, mid: number, receiptMessage: Message.messageService}
+  'payment_sent': {peerId: PeerId, mid: number, receiptMessage: Message.messageService},
+
+  'web_view_result_sent': Long,
 
   'premium_toggle': boolean,
   'premium_toggle_private': {isNew: boolean, isPremium: boolean},
